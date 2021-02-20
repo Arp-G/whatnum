@@ -153,62 +153,6 @@ defmodule MNIST do
     params = MNIST.init_random_params()
 
     IO.puts("Training MNIST for 10 epochs...\n\n")
-    final_params = MNIST.train(train_images, train_labels, params, epochs: 20)
-
-    Nx.backend_transfer(final_params)
-  end
-end
-
-defmodule ImageParser do
-  # Load pixel values from a png image
-  def load_img(path) do
-    {:ok, %Pixels{data: data}} = Pixels.read_file(path)
-    data
-  end
-
-  def resize(input_file_path) do
-    System.cmd("convert", [
-      input_file_path,
-      "-set",
-      "colorspace",
-      "Gray",
-      "-separate",
-      "-average",
-      "-resize",
-      "28x28!",
-      "-channel",
-      "RGB",
-      "-negate",
-      "/tmp/out.png"
-    ])
-  end
-
-  def parse_and_make_tensor(image_data) do
-    image_data
-    |> :binary.bin_to_list()
-    |> Enum.with_index()
-    |> Enum.filter(fn {_pixel, index} -> rem(index, 4) == 0 end)
-    |> Enum.map(fn {pixel, _index} -> pixel end)
-    |> :binary.list_to_bin()
-    |> Nx.from_binary({:u, 8})
-  end
-
-  def prepare_img_tensor(img_path \\ "/tmp/out.png") do
-    img_path
-    |> load_img()
-    |> parse_and_make_tensor()
-  end
-
-  def visualize(img_path \\ "/tmp/out.png") do
-    img_path
-    |> prepare_img_tensor()
-    |> Nx.reshape({28, 28})
-    |> Nx.to_heatmap()
-  end
-
-  def predict(img_path \\ "/tmp/out.png") do
-    weights = MNIST.run()
-
-    MNIST.predict(weights, prepare_img_tensor(img_path))
+    MNIST.train(train_images, train_labels, params, epochs: 100)
   end
 end

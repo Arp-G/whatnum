@@ -3,37 +3,30 @@ defmodule WhatNumWeb.PageLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, query: "", results: %{})}
+    {:ok, assign(socket, results: "Nothing !")}
   end
 
   @impl true
-  def handle_event("suggest", %{"q" => query}, socket) do
-    {:noreply, assign(socket, results: search(query), query: query)}
+  def handle_event("clear_canvas", _, socket) do
+    {:noreply, push_event(socket, "clear_canvas", %{})}
   end
 
   @impl true
-  def handle_event("search", %{"q" => query}, socket) do
-    case search(query) do
-      %{^query => vsn} ->
-        {:noreply, redirect(socket, external: "https://hexdocs.pm/#{query}/#{vsn}")}
-
-      _ ->
-        {:noreply,
-         socket
-         |> put_flash(:error, "No dependencies found matching \"#{query}\"")
-         |> assign(results: %{}, query: query)}
-    end
+  def handle_event("save_canvas", _, socket) do
+    {:noreply, push_event(socket, "save_canvas", %{})}
   end
 
-  defp search(query) do
-    if not WhatNumWeb.Endpoint.config(:code_reloader) do
-      raise "action disabled when not in development"
-    end
+  @impl true
+  def handle_event("send_image", %{"image_data" => base64_png}, socket) do
+    save_bas64_encoded_image(base64_png)
 
-    for {app, desc, vsn} <- Application.started_applications(),
-        app = to_string(app),
-        String.starts_with?(app, query) and not List.starts_with?(desc, ~c"ERTS"),
-        into: %{},
-        do: {app, vsn}
+    {:noreply, assign(socket, results: ImageParser.predict("#{System.tmp_dir()}/input.png"))}
+  end
+
+  defp save_bas64_encoded_image(base64_png) do
+    "data:image/png;base64," <> raw_image = base64_png
+
+    "#{System.tmp_dir()}/input.png"
+    |> File.write!(Base.decode64!(raw_image))
   end
 end

@@ -7,14 +7,9 @@ defmodule WhatNum.Application do
 
   def start(_type, _args) do
     children = [
-      # Start the Telemetry supervisor
       WhatNumWeb.Telemetry,
-      # Start the PubSub system
       {Phoenix.PubSub, name: WhatNum.PubSub},
-      # Start the Endpoint (http/https)
       WhatNumWeb.Endpoint
-      # Start a worker by calling: WhatNum.Worker.start_link(arg)
-      # {WhatNum.Worker, arg}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

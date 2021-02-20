@@ -1,5 +1,4 @@
 /* This file is for your main application css. */
-@import "./phoenix.css";
 @import "../node_modules/nprogress/nprogress.css";
 
 /* LiveView specific classes for your customizations */
@@ -88,4 +87,11 @@
   color: #a94442;
   display: block;
   margin: -1rem 0 2rem;
+}
+
+
+// ==== CUSTOM CSS ====
+
+#drawing_pad {
+  border: 2px solid black;
 }
