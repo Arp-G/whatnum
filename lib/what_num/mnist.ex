@@ -1,3 +1,4 @@
+# This code is take from https://github.com/elixir-nx/nx/blob/main/exla/examples/mnist.exs
 defmodule MNIST do
   import Nx.Defn
 
@@ -81,7 +82,7 @@ defmodule MNIST do
     :zlib.gunzip(data)
   end
 
-  def download(images, labels) do
+  def download(images, labels, batch_size \\ 30) do
     <<_::32, n_images::32, n_rows::32, n_cols::32, images::binary>> =
       unzip_cache_or_download(images)
 
@@ -90,7 +91,7 @@ defmodule MNIST do
       |> Nx.from_binary({:u, 8})
       |> Nx.reshape({n_images, n_rows * n_cols}, names: [:batch, :input])
       |> Nx.divide(255)
-      |> Nx.to_batched_list(30)
+      |> Nx.to_batched_list(batch_size)
 
     IO.puts("#{n_images} #{n_rows}x#{n_cols} images\n")
 
@@ -101,7 +102,7 @@ defmodule MNIST do
       |> Nx.from_binary({:u, 8})
       |> Nx.reshape({n_labels, 1}, names: [:batch, :output])
       |> Nx.equal(Nx.tensor(Enum.to_list(0..9)))
-      |> Nx.to_batched_list(30)
+      |> Nx.to_batched_list(batch_size)
 
     IO.puts("#{n_labels} labels\n")
 
@@ -145,6 +146,21 @@ defmodule MNIST do
     end
   end
 
+  # Test neural network accuracy on test datasete
+  def test do
+    {[train_images], [train_labels]} =
+      MNIST.download('t10k-images-idx3-ubyte.gz', 't10k-labels-idx1-ubyte.gz', 10000)
+
+    TrainingCache.get_weights()
+    |> test_result(train_images, train_labels)
+  end
+
+  defn test_result({w1, b1, w2, b2}, train_images, train_labels) do
+    acc = accuracy({w1, b1, w2, b2}, train_images, train_labels)
+
+    acc / 10000
+  end
+
   def run do
     {train_images, train_labels} =
       MNIST.download('train-images-idx3-ubyte.gz', 'train-labels-idx1-ubyte.gz')
@@ -153,6 +169,6 @@ defmodule MNIST do
     params = MNIST.init_random_params()
 
     IO.puts("Training MNIST for 10 epochs...\n\n")
-    MNIST.train(train_images, train_labels, params, epochs: 100)
+    MNIST.train(train_images, train_labels, params, epochs: 20)
   end
 end

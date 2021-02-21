@@ -1,3 +1,4 @@
+# This genserver just stores the trained neural network weights to avoid retraining it every time we need a prediction
 defmodule TrainingCache do
   use Agent
 
@@ -6,6 +7,12 @@ defmodule TrainingCache do
   end
 
   def get_weights do
-    Agent.get(__MODULE__, & &1)
+    if Process.whereis(TrainingCache) do
+      Agent.get(__MODULE__, & &1)
+    else
+      weights = MNIST.run()
+      TrainingCache.start_link(weights)
+      weights
+    end
   end
 end

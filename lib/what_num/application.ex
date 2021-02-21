@@ -12,6 +12,9 @@ defmodule WhatNum.Application do
       WhatNumWeb.Endpoint
     ]
 
+    # Start Neural net training
+    TrainingCache.start_link( MNIST.run())
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: WhatNum.Supervisor]
